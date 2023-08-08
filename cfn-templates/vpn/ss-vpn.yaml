@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation to provision a VPN
+Parameters:
+  OnPremIP:
+    Description: Enter IP Address for On-Premises Firewall
+    Type: String
+    Default: "3.111.38.155"
+  OnPremBGP:
+    Description: Enter BGP for On-Premises Network
+    Type: Number
+    Default: 65000
+  OnPremDevice:
+    Description: Enter Name for On-Premises for Firewall
+    Type: String
+    Default: myFirewall
+  VPC:
+    Description: Enter Name for On-Premises for Firewall
+    Type: String
+    Default: vpc-0e803f043a895b9fd    
+
+Resources: 
+  myCustomerGateway:
+    Type: AWS::EC2::CustomerGateway
+    Properties: 
+      BgpAsn: !Ref OnPremBGP
+      DeviceName: !Ref OnPremDevice
+      IpAddress: !Ref OnPremIP
+      Tags:
+        - Key: Name
+          Value: "Test CGW"
+      Type: ipsec.1
+  myVPNGateway: 
+   Type: AWS::EC2::VPNGateway
+   Properties: 
+      Type: ipsec.1
+      Tags: 
+      - Key: Name
+        Value: "Test CGW"
+  AttachVpnGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: VPC
+      VpnGatewayId:
+        Ref: myVPNGateway
+  myVPNConnection: 
+    Type: AWS::EC2::VPNConnection
+    Properties: 
+      Type: ipsec.1
+      StaticRoutesOnly: true
+      Tags: 
+      - Key: Name
+        Value: "Test SS VPN"      
+      CustomerGatewayId: 
+        !Ref myCustomerGateway
+      VpnGatewayId: 
+        !Ref myVPNGateway
